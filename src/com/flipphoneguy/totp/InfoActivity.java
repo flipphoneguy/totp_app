@@ -13,7 +13,6 @@ public class InfoActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ThemeUtil.applyTheme(this);
         setContentView(R.layout.activity_info);
 
         ((TextView) findViewById(R.id.version_text))
@@ -39,5 +38,11 @@ public class InfoActivity extends Activity {
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
         } catch (Exception ignored) {}
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        App.onUserLeaveHint();
     }
 }

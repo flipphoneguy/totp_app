@@ -35,11 +35,11 @@ public class MainActivity extends Activity {
             ui.postDelayed(this, 1000);
         }
     };
+    private boolean unlockPending = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ThemeUtil.applyTheme(this);
         setContentView(R.layout.activity_main);
 
         listView   = findViewById(R.id.totp_list);
@@ -75,12 +75,8 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Unlock if password protected; load otherwise
-        if (EntryStore.isPasswordEnabled(this) && !EntryStore.hasActivePassword()) {
-            Intent i = new Intent(this, PasswordActivity.class);
-            i.putExtra(PasswordActivity.EXTRA_MODE, PasswordActivity.MODE_UNLOCK);
-            startActivityForResult(i, REQ_UNLOCK);
-        }
+        // Unlock check happens in onResume so it covers both cold start and
+        // returning from background.
 
         // Handle otpauth:// intents from QR scanners
         handleViewIntent(getIntent());
@@ -115,7 +111,13 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         if (EntryStore.isPasswordEnabled(this) && !EntryStore.hasActivePassword()) {
-            return; // wait for unlock
+            if (!unlockPending) {
+                unlockPending = true;
+                Intent i = new Intent(this, PasswordActivity.class);
+                i.putExtra(PasswordActivity.EXTRA_MODE, PasswordActivity.MODE_UNLOCK);
+                startActivityForResult(i, REQ_UNLOCK);
+            }
+            return;
         }
         reload();
         ui.post(tick);
@@ -128,9 +130,16 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        App.onUserLeaveHint();
+    }
+
+    @Override
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
         if (req == REQ_UNLOCK) {
+            unlockPending = false;
             if (res != RESULT_OK) {
                 finish();
                 return;

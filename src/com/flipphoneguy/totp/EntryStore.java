@@ -12,18 +12,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Reads / writes the entry list as JSON. When a password is set, the file is
- * AES-GCM encrypted on disk; the active password is held in memory after
- * unlock and supplied by callers.
+ * Always-encrypted entry store.
+ *
+ *   No password set: entries are encrypted with an Android Keystore key
+ *   (AES-GCM-256, key never leaves the secure enclave on devices that have
+ *   one). At rest is "TOTPK\n…".
+ *
+ *   Password set: encrypted with PBKDF2-derived key from the user's
+ *   password. At rest is "TOTP1\n…".
+ *
+ * Either way the on-disk file is the same path: entries.enc.
  */
 public class EntryStore {
-    private static final String FILE_PLAIN = "entries.json";
-    private static final String FILE_ENC = "entries.enc";
+    private static final String FILE = "entries.enc";
+    private static final String LEGACY_PLAIN = "entries.json";
+
     private static final String PREFS = "totp";
     private static final String KEY_HAS_PASSWORD = "has_password";
-    private static final String KEY_DARK = "dark_mode";
 
-    /** Holds the password while the app is unlocked. Cleared on lock/exit. */
+    /** Active password held in memory while app is unlocked. */
     private static char[] sActivePassword;
 
     public static void setActivePassword(char[] pw) { sActivePassword = pw; }
@@ -38,12 +45,6 @@ public class EntryStore {
     public static boolean isPasswordEnabled(Context c) {
         return prefs(c).getBoolean(KEY_HAS_PASSWORD, false);
     }
-    public static boolean isDarkMode(Context c) {
-        return prefs(c).getBoolean(KEY_DARK, false);
-    }
-    public static void setDarkMode(Context c, boolean v) {
-        prefs(c).edit().putBoolean(KEY_DARK, v).apply();
-    }
 
     private static SharedPreferences prefs(Context c) {
         return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
@@ -51,19 +52,19 @@ public class EntryStore {
 
     public static List<TotpEntry> load(Context ctx) {
         try {
-            String raw;
+            migrateLegacyIfNeeded(ctx);
+            File f = new File(ctx.getFilesDir(), FILE);
+            if (!f.exists()) return new ArrayList<>();
+
+            String wire = readAll(f);
+            String json;
             if (isPasswordEnabled(ctx)) {
-                File f = new File(ctx.getFilesDir(), FILE_ENC);
-                if (!f.exists()) return new ArrayList<>();
-                String wire = readAll(f);
                 if (sActivePassword == null) return new ArrayList<>();
-                raw = CryptoUtil.decrypt(wire, sActivePassword);
+                json = CryptoUtil.decryptWithPassword(wire, sActivePassword);
             } else {
-                File f = new File(ctx.getFilesDir(), FILE_PLAIN);
-                if (!f.exists()) return new ArrayList<>();
-                raw = readAll(f);
+                json = CryptoUtil.decryptWithKeystore(wire);
             }
-            return JsonCodec.parse(raw);
+            return JsonCodec.parse(json);
         } catch (Exception e) {
             return new ArrayList<>();
         }
@@ -71,22 +72,36 @@ public class EntryStore {
 
     public static void save(Context ctx, List<TotpEntry> entries) throws Exception {
         String json = JsonCodec.serialize(entries);
+        String wire;
         if (isPasswordEnabled(ctx)) {
             if (sActivePassword == null)
                 throw new IllegalStateException("No active password");
-            String wire = CryptoUtil.encrypt(json, sActivePassword);
-            writeAll(new File(ctx.getFilesDir(), FILE_ENC), wire);
-            // Make sure plaintext file is gone
-            new File(ctx.getFilesDir(), FILE_PLAIN).delete();
+            wire = CryptoUtil.encryptWithPassword(json, sActivePassword);
         } else {
-            writeAll(new File(ctx.getFilesDir(), FILE_PLAIN), json);
-            new File(ctx.getFilesDir(), FILE_ENC).delete();
+            wire = CryptoUtil.encryptWithKeystore(json);
         }
+        writeAll(new File(ctx.getFilesDir(), FILE), wire);
+        // Make sure no legacy plaintext lingers
+        new File(ctx.getFilesDir(), LEGACY_PLAIN).delete();
     }
 
-    /** Migrate storage between encrypted/plain when the password setting changes. */
+    /** Migrate a pre-1.0.1 plaintext entries.json into encrypted entries.enc. */
+    private static void migrateLegacyIfNeeded(Context ctx) {
+        File legacy = new File(ctx.getFilesDir(), LEGACY_PLAIN);
+        File current = new File(ctx.getFilesDir(), FILE);
+        if (!legacy.exists() || current.exists()) return;
+        try {
+            String json = readAll(legacy);
+            String wire = isPasswordEnabled(ctx) && sActivePassword != null
+                ? CryptoUtil.encryptWithPassword(json, sActivePassword)
+                : CryptoUtil.encryptWithKeystore(json);
+            writeAll(current, wire);
+            legacy.delete();
+        } catch (Exception ignored) {}
+    }
+
     public static void enablePassword(Context ctx, char[] newPw) throws Exception {
-        // Capture current entries with old setting
+        // Read existing entries with current (keystore) key, then re-encrypt.
         List<TotpEntry> existing = load(ctx);
         prefs(ctx).edit().putBoolean(KEY_HAS_PASSWORD, true).apply();
         setActivePassword(newPw);
@@ -94,6 +109,7 @@ public class EntryStore {
     }
 
     public static void disablePassword(Context ctx) throws Exception {
+        // Read with active password, then re-encrypt with keystore key.
         List<TotpEntry> existing = load(ctx);
         prefs(ctx).edit().putBoolean(KEY_HAS_PASSWORD, false).apply();
         clearActivePassword();
@@ -102,11 +118,7 @@ public class EntryStore {
 
     public static String readAll(File f) throws Exception {
         FileInputStream in = new FileInputStream(f);
-        try {
-            return readAll(in);
-        } finally {
-            in.close();
-        }
+        try { return readAll(in); } finally { in.close(); }
     }
 
     public static String readAll(InputStream in) throws Exception {
@@ -119,10 +131,6 @@ public class EntryStore {
 
     public static void writeAll(File f, String s) throws Exception {
         FileOutputStream out = new FileOutputStream(f);
-        try {
-            out.write(s.getBytes("UTF-8"));
-        } finally {
-            out.close();
-        }
+        try { out.write(s.getBytes("UTF-8")); } finally { out.close(); }
     }
 }

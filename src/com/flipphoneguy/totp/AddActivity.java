@@ -33,7 +33,6 @@ public class AddActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ThemeUtil.applyTheme(this);
         setContentView(R.layout.activity_add);
 
         manualForm = findViewById(R.id.manual_form);
@@ -180,5 +179,11 @@ public class AddActivity extends Activity {
             Toast.makeText(this, "Save failed: " + ex.getMessage(),
                 Toast.LENGTH_LONG).show();
         }
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        App.onUserLeaveHint();
     }
 }

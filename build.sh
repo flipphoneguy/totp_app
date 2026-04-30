@@ -86,7 +86,7 @@ aapt2 link \
     --manifest AndroidManifest.xml \
     -I "$FRAMEWORK_RES" \
     --java "$BUILD_DIR/gen" \
-    --min-sdk-version 21 \
+    --min-sdk-version 23 \
     --target-sdk-version 35 \
     --version-code "$VERSION_CODE" \
     --version-name "$VERSION_NAME" \
@@ -106,7 +106,7 @@ CLASS_FILES=$(find "$BUILD_DIR/classes" -name "*.class" | tr '\n' ' ')
 d8 \
     --output "$BUILD_DIR/dex" \
     --lib "$ANDROID_JAR" \
-    --min-api 21 \
+    --min-api 23 \
     $CLASS_FILES \
     "$ZXING_JAR"
 

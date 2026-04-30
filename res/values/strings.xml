@@ -40,9 +40,7 @@
     <string name="settings_about_section">App</string>
 
     <string name="opt_password_lock">Require password on launch</string>
-    <string name="opt_password_lock_sub">Encrypts the database on disk and prompts at startup.</string>
-    <string name="opt_dark_mode">Dark mode</string>
-    <string name="opt_dark_mode_sub">Use a dark color theme.</string>
+    <string name="opt_password_lock_sub">Adds a password prompt when the app reopens. Accounts are always encrypted on disk.</string>
 
     <string name="opt_export_plain">Export plaintext</string>
     <string name="opt_export_enc">Export encrypted</string>

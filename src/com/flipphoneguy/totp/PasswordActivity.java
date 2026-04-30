@@ -29,7 +29,6 @@ public class PasswordActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ThemeUtil.applyTheme(this);
         setContentView(R.layout.activity_password);
 
         mode = getIntent().getIntExtra(EXTRA_MODE, MODE_UNLOCK);
@@ -93,7 +92,7 @@ public class PasswordActivity extends Activity {
         }
         try {
             String wire = EntryStore.readAll(f);
-            CryptoUtil.decrypt(wire, p1.toCharArray());
+            CryptoUtil.decryptWithPassword(wire, p1.toCharArray());
             EntryStore.setActivePassword(p1.toCharArray());
             setResult(RESULT_OK);
             finish();
@@ -115,5 +114,11 @@ public class PasswordActivity extends Activity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        App.onUserLeaveHint();
     }
 }

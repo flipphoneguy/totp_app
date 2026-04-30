@@ -31,18 +31,14 @@ public class SettingsActivity extends Activity {
     private static final int REQ_PERM_WRITE   = 501;
 
     private Switch swPassword;
-    private Switch swDark;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ThemeUtil.applyTheme(this);
         setContentView(R.layout.activity_settings);
 
         swPassword = findViewById(R.id.sw_password);
-        swDark     = findViewById(R.id.sw_dark);
         swPassword.setChecked(EntryStore.isPasswordEnabled(this));
-        swDark.setChecked(EntryStore.isDarkMode(this));
 
         ((TextView) findViewById(R.id.version_label))
             .setText("v" + UpdateChecker.currentVersion(this));
@@ -52,9 +48,6 @@ public class SettingsActivity extends Activity {
         });
         findViewById(R.id.row_password).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { onTogglePassword(); }
-        });
-        findViewById(R.id.row_dark).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { onToggleDark(); }
         });
         findViewById(R.id.btn_export_plain).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { exportPlain(); }
@@ -89,7 +82,7 @@ public class SettingsActivity extends Activity {
             // Verify before disabling
             new AlertDialog.Builder(this)
                 .setTitle("Disable password?")
-                .setMessage("Your accounts will be stored unencrypted on disk after this. Continue?")
+                .setMessage("Accounts stay encrypted on disk, but the password prompt will no longer be required. Continue?")
                 .setPositiveButton("Disable", new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface d, int w) {
                         try {
@@ -106,13 +99,6 @@ public class SettingsActivity extends Activity {
                 .setNegativeButton(R.string.btn_cancel, null)
                 .show();
         }
-    }
-
-    private void onToggleDark() {
-        boolean newVal = !EntryStore.isDarkMode(this);
-        EntryStore.setDarkMode(this, newVal);
-        swDark.setChecked(newVal);
-        recreate();
     }
 
     @Override
@@ -185,7 +171,7 @@ public class SettingsActivity extends Activity {
         try {
             List<TotpEntry> entries = EntryStore.load(this);
             String json = JsonCodec.serialize(entries);
-            String wire = CryptoUtil.encrypt(json, pendingExportPw.toCharArray());
+            String wire = CryptoUtil.encryptWithPassword(json, pendingExportPw.toCharArray());
             OutputStream os = getContentResolver().openOutputStream(uri);
             os.write(wire.getBytes("UTF-8"));
             os.close();
@@ -209,12 +195,12 @@ public class SettingsActivity extends Activity {
     private void doImport(final Uri uri) {
         try {
             String content = EntryStore.readAll(getContentResolver().openInputStream(uri));
-            if (CryptoUtil.isEncrypted(content)) {
+            if (CryptoUtil.isPasswordEncrypted(content)) {
                 final String wire = content;
                 promptPassword("Backup password", new PwCallback() {
                     @Override public void onPassword(String pw) {
                         try {
-                            String json = CryptoUtil.decrypt(wire, pw.toCharArray());
+                            String json = CryptoUtil.decryptWithPassword(wire, pw.toCharArray());
                             mergeImported(json);
                         } catch (Exception e) {
                             Toast.makeText(SettingsActivity.this,
@@ -272,5 +258,11 @@ public class SettingsActivity extends Activity {
             })
             .setNegativeButton(R.string.btn_cancel, null)
             .show();
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        App.onUserLeaveHint();
     }
 }

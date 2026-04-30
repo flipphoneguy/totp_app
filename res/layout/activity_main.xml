@@ -99,6 +99,7 @@
         android:divider="@color/divider"
         android:dividerHeight="1dp"
         android:listSelector="@drawable/item_bg"
+        android:drawSelectorOnTop="true"
         android:scrollbarStyle="outsideOverlay"
         android:focusable="true" />
 
