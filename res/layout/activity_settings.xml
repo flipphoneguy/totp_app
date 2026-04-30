@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_page">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@color/bg_header"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:elevation="4dp">
+
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
+            android:text="@string/btn_back"
+            android:textColor="@color/text_on_primary"
+            android:textSize="22sp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:focusable="true" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/settings_title"
+            android:textColor="@color/text_on_primary"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- ── SECURITY ───────────────────────────────────── -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_security"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textAllCaps="true"
+                android:letterSpacing="0.08"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/row_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_card"
+                android:orientation="horizontal"
+                android:padding="14dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:nextFocusUp="@+id/btn_back"
+                android:nextFocusDown="@+id/row_dark">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:focusable="false">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/opt_password_lock"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/opt_password_lock_sub"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <Switch
+                    android:id="@+id/sw_password"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="false"
+                    android:clickable="false" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="10dp" />
+
+            <LinearLayout
+                android:id="@+id/row_dark"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_card"
+                android:orientation="horizontal"
+                android:padding="14dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:nextFocusUp="@+id/row_password"
+                android:nextFocusDown="@+id/btn_export_plain">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:focusable="false">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/opt_dark_mode"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/opt_dark_mode_sub"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <Switch
+                    android:id="@+id/sw_dark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="false"
+                    android:clickable="false" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="22dp" />
+
+            <!-- ── BACKUP ─────────────────────────────────────── -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_backup"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textAllCaps="true"
+                android:letterSpacing="0.08"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btn_export_plain"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="@string/opt_export_plain"
+                style="@style/BtnOutline"
+                android:layout_marginBottom="8dp"
+                android:nextFocusUp="@+id/row_dark"
+                android:nextFocusDown="@+id/btn_export_enc" />
+
+            <Button
+                android:id="@+id/btn_export_enc"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="@string/opt_export_enc"
+                style="@style/BtnOutline"
+                android:layout_marginBottom="8dp"
+                android:nextFocusUp="@+id/btn_export_plain"
+                android:nextFocusDown="@+id/btn_import" />
+
+            <Button
+                android:id="@+id/btn_import"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="@string/opt_import"
+                style="@style/BtnOutline"
+                android:nextFocusUp="@+id/btn_export_enc"
+                android:nextFocusDown="@+id/btn_check_update" />
+
+            <View android:layout_width="match_parent" android:layout_height="22dp" />
+
+            <!-- ── APP ────────────────────────────────────────── -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_about_section"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textAllCaps="true"
+                android:letterSpacing="0.08"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btn_check_update"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="@string/opt_check_update"
+                style="@style/BtnPrimary"
+                android:layout_marginBottom="8dp"
+                android:nextFocusUp="@+id/btn_import"
+                android:nextFocusDown="@+id/btn_about" />
+
+            <Button
+                android:id="@+id/btn_about"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="@string/opt_about"
+                style="@style/BtnOutline"
+                android:nextFocusUp="@+id/btn_check_update" />
+
+            <TextView
+                android:id="@+id/version_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_hint"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:layout_marginTop="14dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
