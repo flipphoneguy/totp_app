@@ -130,12 +130,6 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onUserLeaveHint() {
-        super.onUserLeaveHint();
-        App.onUserLeaveHint();
-    }
-
-    @Override
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
         if (req == REQ_UNLOCK) {

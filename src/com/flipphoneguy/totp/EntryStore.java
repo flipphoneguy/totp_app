@@ -101,16 +101,37 @@ public class EntryStore {
     }
 
     public static void enablePassword(Context ctx, char[] newPw) throws Exception {
-        // Read existing entries with current (keystore) key, then re-encrypt.
-        List<TotpEntry> existing = load(ctx);
+        // Read existing entries with the keystore key directly, then re-encrypt
+        // under the password. We don't go through load() because load() picks
+        // its decryption mode from the (about-to-change) preference, and a
+        // silent failure would wipe the user's accounts.
+        File f = new File(ctx.getFilesDir(), FILE);
+        List<TotpEntry> existing;
+        if (f.exists()) {
+            String json = CryptoUtil.decryptWithKeystore(readAll(f));
+            existing = JsonCodec.parse(json);
+        } else {
+            existing = new ArrayList<>();
+        }
         prefs(ctx).edit().putBoolean(KEY_HAS_PASSWORD, true).apply();
         setActivePassword(newPw);
         save(ctx, existing);
     }
 
     public static void disablePassword(Context ctx) throws Exception {
-        // Read with active password, then re-encrypt with keystore key.
-        List<TotpEntry> existing = load(ctx);
+        // Read with the in-memory password directly, then re-encrypt under the
+        // keystore key. Going through load() would silently return an empty
+        // list if the active password is missing, wiping accounts.
+        File f = new File(ctx.getFilesDir(), FILE);
+        List<TotpEntry> existing;
+        if (f.exists()) {
+            if (sActivePassword == null)
+                throw new IllegalStateException("App is locked — unlock before disabling password.");
+            String json = CryptoUtil.decryptWithPassword(readAll(f), sActivePassword);
+            existing = JsonCodec.parse(json);
+        } else {
+            existing = new ArrayList<>();
+        }
         prefs(ctx).edit().putBoolean(KEY_HAS_PASSWORD, false).apply();
         clearActivePassword();
         save(ctx, existing);

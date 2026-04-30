@@ -40,9 +40,4 @@ public class InfoActivity extends Activity {
         } catch (Exception ignored) {}
     }
 
-    @Override
-    protected void onUserLeaveHint() {
-        super.onUserLeaveHint();
-        App.onUserLeaveHint();
-    }
 }

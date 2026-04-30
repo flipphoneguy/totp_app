@@ -108,6 +108,9 @@ public class SettingsActivity extends Activity {
             swPassword.setChecked(EntryStore.isPasswordEnabled(this));
             return;
         }
+        if (req == REQ_EXPORT_PLAIN || req == REQ_EXPORT_ENC || req == REQ_IMPORT) {
+            App.endSubIntent();
+        }
 
         if (res != RESULT_OK || data == null) return;
         Uri uri = data.getData();
@@ -130,6 +133,7 @@ public class SettingsActivity extends Activity {
                     i.setType("application/json");
                     i.addCategory(Intent.CATEGORY_OPENABLE);
                     i.putExtra(Intent.EXTRA_TITLE, "totp_backup.json");
+                    App.beginSubIntent();
                     startActivityForResult(i, REQ_EXPORT_PLAIN);
                 }
             })
@@ -161,6 +165,7 @@ public class SettingsActivity extends Activity {
                 i.addCategory(Intent.CATEGORY_OPENABLE);
                 i.putExtra(Intent.EXTRA_TITLE, "totp_backup.totp1");
                 pendingExportPw = pw;
+                App.beginSubIntent();
                 startActivityForResult(i, REQ_EXPORT_ENC);
             }
         });
@@ -189,6 +194,7 @@ public class SettingsActivity extends Activity {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         i.setType("*/*");
         i.addCategory(Intent.CATEGORY_OPENABLE);
+        App.beginSubIntent();
         startActivityForResult(i, REQ_IMPORT);
     }
 
@@ -260,9 +266,4 @@ public class SettingsActivity extends Activity {
             .show();
     }
 
-    @Override
-    protected void onUserLeaveHint() {
-        super.onUserLeaveHint();
-        App.onUserLeaveHint();
-    }
 }

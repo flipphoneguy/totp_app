@@ -7,34 +7,47 @@ import android.os.Bundle;
 /**
  * Tracks foreground state so the password lock can be cleared whenever the
  * user actually leaves the app (HOME, recents, switching apps), without
- * tripping when sub-activities run (camera, file picker, installer).
+ * tripping when a sub-intent the app launched (camera, file picker,
+ * installer) covers our window.
  *
- * Mechanism: each activity calls {@link #onUserLeaveHint()} from its own
- * onUserLeaveHint, which Android only fires on real user-initiated departure.
- * We flip a flag, and on the next activity start (anywhere in our process)
- * we clear the cached password. {@link MainActivity#onResume} then sees no
- * active password and re-prompts.
+ * Mechanism:
+ *   - Started-activity counter (sStartedCount). Activity transitions inside
+ *     our process keep the count >= 1. When the count goes to 0, every
+ *     activity in our process is stopped, i.e. we're in the background.
+ *   - Sub-intent counter (sSubIntents). Activities call
+ *     {@link #beginSubIntent()} before launching another app's activity for
+ *     result, and {@link #endSubIntent()} on result. While that count is
+ *     non-zero, we don't treat a 0 started-count as the user leaving — they
+ *     just used the camera, picker, etc.
  */
 public class App extends Application {
 
-    private static volatile boolean sUserLeft = false;
     private static int sStartedCount = 0;
+    private static int sSubIntents = 0;
+    private static boolean sBackgrounded = false;
 
-    public static void onUserLeaveHint() { sUserLeft = true; }
+    public static void beginSubIntent() { sSubIntents++; }
+    public static void endSubIntent() {
+        if (sSubIntents > 0) sSubIntents--;
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
             @Override public void onActivityStarted(Activity a) {
+                int prev = sStartedCount;
                 sStartedCount++;
-                if (sUserLeft) {
+                if (prev == 0 && sBackgrounded) {
                     EntryStore.clearActivePassword();
-                    sUserLeft = false;
+                    sBackgrounded = false;
                 }
             }
             @Override public void onActivityStopped(Activity a) {
                 if (sStartedCount > 0) sStartedCount--;
+                if (sStartedCount == 0 && sSubIntents == 0) {
+                    sBackgrounded = true;
+                }
             }
 
             // Unused

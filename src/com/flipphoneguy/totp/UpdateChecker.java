@@ -212,20 +212,38 @@ public final class UpdateChecker {
 
     private static void launchInstaller(Context ctx, File apk) {
         try {
+            // Stage the APK in our internal cache. Some package installers
+            // can't parse APKs served from getExternalFilesDir() through a
+            // content URI, but a copy under cacheDir is reliably readable.
+            File staged = new File(ctx.getCacheDir(), "update.apk");
+            copyFile(apk, staged);
+
             Intent i = new Intent(Intent.ACTION_VIEW);
-            Uri uri;
-            if (Build.VERSION.SDK_INT >= 24) {
-                uri = SharedFileProvider.getUriForFile(ctx, apk);
-                i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            } else {
-                uri = Uri.fromFile(apk);
-            }
+            Uri uri = SharedFileProvider.getUriForFile(ctx, staged);
             i.setDataAndType(uri, "application/vnd.android.package-archive");
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
         } catch (Exception e) {
             Toast.makeText(ctx, "Install launch failed: " + e.getMessage(),
                 Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private static void copyFile(File src, File dst) throws Exception {
+        java.io.InputStream in = new java.io.FileInputStream(src);
+        try {
+            java.io.OutputStream out = new java.io.FileOutputStream(dst);
+            try {
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+                out.flush();
+            } finally {
+                out.close();
+            }
+        } finally {
+            in.close();
         }
     }
 

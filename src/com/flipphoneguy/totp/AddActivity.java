@@ -78,6 +78,7 @@ public class AddActivity extends Activity {
             Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             i.putExtra(MediaStore.EXTRA_OUTPUT, pendingPhotoUri);
             i.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            App.beginSubIntent();
             startActivityForResult(i, REQ_CAMERA);
         } catch (Exception e) {
             Toast.makeText(this, "Camera not available: " + e.getMessage(),
@@ -99,12 +100,14 @@ public class AddActivity extends Activity {
         Intent i = new Intent(Intent.ACTION_GET_CONTENT);
         i.setType("image/*");
         i.addCategory(Intent.CATEGORY_OPENABLE);
+        App.beginSubIntent();
         startActivityForResult(i, REQ_PICK_IMAGE);
     }
 
     @Override
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
+        App.endSubIntent();
         if (res != RESULT_OK) return;
 
         Bitmap bmp = null;
@@ -181,9 +184,4 @@ public class AddActivity extends Activity {
         }
     }
 
-    @Override
-    protected void onUserLeaveHint() {
-        super.onUserLeaveHint();
-        App.onUserLeaveHint();
-    }
 }

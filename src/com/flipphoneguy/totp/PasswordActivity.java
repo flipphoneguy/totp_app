@@ -116,9 +116,4 @@ public class PasswordActivity extends Activity {
         }
     }
 
-    @Override
-    protected void onUserLeaveHint() {
-        super.onUserLeaveHint();
-        App.onUserLeaveHint();
-    }
 }
