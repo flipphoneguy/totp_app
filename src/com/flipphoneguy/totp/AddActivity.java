@@ -110,21 +110,22 @@ public class AddActivity extends Activity {
         App.endSubIntent();
         if (res != RESULT_OK) return;
 
+        Uri imageUri = null;
+        if (req == REQ_CAMERA && pendingPhotoUri != null) {
+            imageUri = pendingPhotoUri;
+        } else if (req == REQ_PICK_IMAGE && data != null && data.getData() != null) {
+            imageUri = data.getData();
+        }
+
         Bitmap bmp = null;
-        try {
-            if (req == REQ_CAMERA && pendingPhotoUri != null) {
-                InputStream in = getContentResolver().openInputStream(pendingPhotoUri);
-                bmp = BitmapFactory.decodeStream(in);
-                if (in != null) in.close();
-            } else if (req == REQ_PICK_IMAGE && data != null && data.getData() != null) {
-                InputStream in = getContentResolver().openInputStream(data.getData());
-                bmp = BitmapFactory.decodeStream(in);
-                if (in != null) in.close();
+        if (imageUri != null) {
+            try {
+                bmp = decodeSubsampled(imageUri, 1280);
+            } catch (Exception e) {
+                Toast.makeText(this, "Could not read image: " + e.getMessage(),
+                    Toast.LENGTH_LONG).show();
+                return;
             }
-        } catch (Exception e) {
-            Toast.makeText(this, "Could not read image: " + e.getMessage(),
-                Toast.LENGTH_LONG).show();
-            return;
         }
 
         if (bmp == null) {
@@ -155,6 +156,30 @@ public class AddActivity extends Activity {
         }
 
         addAndFinish(parsed);
+    }
+
+    private Bitmap decodeSubsampled(Uri uri, int targetMaxEdge) throws Exception {
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        InputStream in = getContentResolver().openInputStream(uri);
+        try {
+            BitmapFactory.decodeStream(in, null, bounds);
+        } finally {
+            if (in != null) in.close();
+        }
+        int maxEdge = Math.max(bounds.outWidth, bounds.outHeight);
+        int sample = 1;
+        while (maxEdge > 0 && (maxEdge / sample) > targetMaxEdge) sample *= 2;
+
+        BitmapFactory.Options opts = new BitmapFactory.Options();
+        opts.inSampleSize = sample;
+        opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        InputStream in2 = getContentResolver().openInputStream(uri);
+        try {
+            return BitmapFactory.decodeStream(in2, null, opts);
+        } finally {
+            if (in2 != null) in2.close();
+        }
     }
 
     private void saveManual() {
