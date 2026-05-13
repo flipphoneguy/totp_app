@@ -18,7 +18,6 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 public class AddActivity extends Activity {

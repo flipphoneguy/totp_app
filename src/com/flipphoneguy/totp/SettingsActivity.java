@@ -1,15 +1,11 @@
 package com.flipphoneguy.totp;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.text.InputType;
 import android.view.View;
 import android.widget.EditText;
@@ -17,19 +13,15 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
 import java.io.OutputStream;
 import java.util.List;
 
 public class SettingsActivity extends Activity {
 
-    private static final int REQ_VERIFY_PW    = 401;
     private static final int REQ_SET_PW       = 402;
     private static final int REQ_EXPORT_PLAIN = 410;
     private static final int REQ_EXPORT_ENC   = 411;
     private static final int REQ_IMPORT       = 412;
-    private static final int REQ_PERM_WRITE   = 501;
-
     private Switch swPassword;
 
     @Override

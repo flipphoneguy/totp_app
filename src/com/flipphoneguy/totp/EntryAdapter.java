@@ -1,7 +1,6 @@
 package com.flipphoneguy.totp;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,9 +46,9 @@ public class EntryAdapter extends ArrayAdapter<TotpEntry> {
         int rem = TotpGenerator.secondsRemaining();
         h.seconds.setText(String.valueOf(rem));
         if (rem <= 5) {
-            h.seconds.setTextColor(getContext().getResources().getColor(R.color.warn));
+            h.seconds.setTextColor(getContext().getColor(R.color.warn));
         } else {
-            h.seconds.setTextColor(getContext().getResources().getColor(R.color.text_primary));
+            h.seconds.setTextColor(getContext().getColor(R.color.text_primary));
         }
 
         return convertView;
